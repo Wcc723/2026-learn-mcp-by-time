@@ -85,31 +85,28 @@ pwd
 
 | Scope | 寫到哪 | 在哪些目錄能用 |
 |---|---|---|
-| `local`（預設） | 你執行 `mcp add` 當下那個目錄專屬設定 | **只有那一個目錄** |
-| `project` | 該專案根目錄 `.mcp.json` | 任何人開啟該資料夾 |
+| `local`（Claude Code 預設） | 你執行 `mcp add` 當下那個目錄專屬設定 | **只有那一個目錄** |
+| `project` | 該專案根目錄的設定檔（隨資料夾走） | 任何人開啟該資料夾 |
 | `user` | 全域 user 設定 | **所有目錄** |
 
-Codex CLI 預設就寫到 `~/.codex/config.toml`（user level），本來就跨目錄。
+**本範例採用 `project` scope**，因為設定檔跟著資料夾走，學員一眼就看到「設定檔就在我打開的這個資料夾裡」，最直觀。
 
 ---
 
-### Claude Code
+### Claude Code（專案層級：`.mcp.json`）
 
-兩種方式擇一：
+兩種方式擇一，兩者**結果完全相同** — 都會寫入 / 讀取專案根目錄的 `.mcp.json`：
 
-**方式 1：CLI 子命令（推薦）**
+**方式 1：CLI 子命令**
 
 ```bash
-# 只在範例資料夾內可用（預設 local scope）
-claude mcp add current-time -- node <ABS>/server.js
-
-# 想任何目錄都能用就加 --scope user
-claude mcp add --scope user current-time -- node <ABS>/server.js
-
+claude mcp add --scope project current-time -- node <ABS>/server.js
 claude mcp list                # 確認 current-time 出現在列表
 ```
 
-**方式 2：在專案根目錄放 `.mcp.json`**
+**方式 2：手動建立 `.mcp.json`（與方式 1 等價）**
+
+在專案根目錄建立 `.mcp.json`：
 
 ```json
 {
@@ -125,17 +122,11 @@ claude mcp list                # 確認 current-time 出現在列表
 
 下次在此資料夾開啟 Claude Code 時會自動偵測 `.mcp.json`，並跳出「是否信任此 server」提示，批准後用 `/mcp` 即可看到。
 
-### Codex CLI
+### Codex CLI（專案層級：`.codex/config.toml`）
 
-兩種方式擇一：
+> ⚠️ `codex mcp add` 子命令**只會寫到 user 層級**（`~/.codex/config.toml`），不支援 `--scope project`。要做專案層級設定**只能手動編輯檔案**。
 
-**方式 1：CLI 子命令（推薦）**
-
-```bash
-codex mcp add current-time -- node <ABS>/server.js
-```
-
-**方式 2：手動編輯 `~/.codex/config.toml`**
+在專案根目錄建立 `.codex/config.toml`：
 
 ```toml
 [mcp_servers.current-time]
@@ -143,7 +134,16 @@ command = "node"
 args = ["<ABS>/server.js"]
 ```
 
-> **共通要點**：`--` 之前是 Host 自己的選項，`--` 之後是「Host 用來啟動 server 的指令」。路徑**必須絕對**，因為 Host 會自己 spawn 一個子程序去跑你的 server。
+**前置動作：必須先信任此專案**，否則整個 `.codex/` 目錄都會被忽略：
+
+- 第一次在這個資料夾跑 `codex`，TUI 會詢問是否信任，按同意即可
+- 或在 `~/.codex/config.toml` 預先加：
+  ```toml
+  [projects."<ABS>"]
+  trust_level = "trusted"
+  ```
+
+> **共通要點**：路徑**必須絕對**（用前面 `pwd` 拿到的 `<ABS>`）。雖然某些情況下相對路徑可行，但「host 啟動 server 時的 cwd」不一定等於專案根，**用絕對路徑最不會踩雷**。
 
 ---
 
