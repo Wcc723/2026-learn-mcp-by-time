@@ -147,9 +147,11 @@ args = ["<ABS>/server.js"]
 
 ## 5. 延伸練習
 
-1. **加參數**：讓 `get_current_time` 接受 `timezone` 參數，回傳指定時區的時間（需引入 `zod`）
-2. **換 transport**：把 stdio 換成 HTTP，看 host 設定要跟著怎麼變
-3. **換語言**：用 Python (`mcp` + FastMCP) 重寫一份，觀察「協定一致、語言可換」
+對應 `server.js` 三個 primitive 各做一個小擴充，體會「誰控制」的差別：
+
+1. **Tool 加參數**：讓 `get_current_time` 接受 `timezone` 參數，回傳指定時區的時間（需引入 `zod` 定義 `inputSchema`）。試著問 AI「現在東京幾點」，看它怎麼自己把參數填進去。
+2. **Prompt 帶 args**：讓 `format_now` 接受 `style` 參數（例如 `"casual"` / `"formal"`），slash command 觸發時把樣式插進 prompt 文字裡。觀察 host 怎麼跳出表單讓使用者填值。
+3. **Resource 動態化**：把 `time://timezones` 改成 `ResourceTemplate("time://now/{zone}")`，讀取時動態回傳該時區當下時間。在 `@` 選單挑不同時區，比較它和 Tool 帶 `timezone` 參數的體感差別 —— 同樣資料、控制權卻完全不同。
 
 ---
 
