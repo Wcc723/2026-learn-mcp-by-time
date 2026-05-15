@@ -151,7 +151,7 @@ args = ["<ABS>/server.js"]
 
 1. **Tool 加參數**：讓 `get_current_time` 接受 `timezone` 參數，回傳指定時區的時間（需引入 `zod` 定義 `inputSchema`）。試著問 AI「現在東京幾點」，看它怎麼自己把參數填進去。
 2. **Prompt 帶 args**：讓 `format_now` 接受 `style` 參數（例如 `"casual"` / `"formal"`），slash command 觸發時把樣式插進 prompt 文字裡。觀察 host 怎麼跳出表單讓使用者填值。
-3. **Resource 動態化**：把 `time://timezones` 改成 `ResourceTemplate("time://now/{zone}")`，讀取時動態回傳該時區當下時間。在 `@` 選單挑不同時區，比較它和 Tool 帶 `timezone` 參數的體感差別 —— 同樣資料、控制權卻完全不同。
+3. **Resource 試用**：在 Claude Code 輸入 `@` 把 `time://timezones` 附進對話，問 AI「依這份清單，幫我列出每個時區當前時間」。比較它和第 1 題（Tool 帶 `timezone` 參數）的體感差別 —— 同樣是「指定時區查時間」，**Resource 要使用者主動挑、Tool 是 AI 自動填參數**，控制權完全不同。
 
 ---
 
