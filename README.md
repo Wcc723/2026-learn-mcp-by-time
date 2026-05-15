@@ -22,10 +22,37 @@ node server.js
 
 **會卡住、不退出，這是正確的行為** — server 在等 host 從 stdin 發送 JSON-RPC 訊息。按 `Ctrl+C` 可中止。
 
-> 想看協定真正的樣子？貼下面這行進去再按 Enter，server 會回一段 JSON 自我介紹：
-> ```json
-> {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"manual","version":"0"}}}
-> ```
+> ⚠️ Server 不是 echo —— 貼亂碼會被無視或回 parse error。**只認 JSON-RPC 訊息**。
+
+### 手動扮演 host：完整跑一次協定
+
+依序把下面 4 行貼進去（每行一條，按 Enter）。這就是 Claude / Codex 平常幫你做的事：
+
+**① `initialize` —— 握手，互相自我介紹**
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"manual","version":"0"}}}
+```
+→ Server 回它的 `name` / `version` / `capabilities`。
+
+**② `notifications/initialized` —— 通知 server「握完手了」**
+```json
+{"jsonrpc":"2.0","method":"notifications/initialized"}
+```
+→ 沒有 `id`，所以**不會有回應**，這是正確的（notification 不需 reply）。
+
+**③ `tools/list` —— 問它有什麼工具**
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}
+```
+→ 回一個陣列，裡面有 `get_current_time`、description、inputSchema。**這就是 host 拿來決定要不要呼叫你的依據** —— 寫好一次 `registerTool`，Claude / Codex / Cursor 都能用同一個 server。
+
+**④ `tools/call` —— 真的執行工具**
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_current_time","arguments":{}}}
+```
+→ 回 `content: [{type:"text", text:"2026-05-15T..."}]`，**這個時間是 `server.js` 裡 `new Date().toISOString()` 真的被執行了**。
+
+前 3 步都只是「協定協商」，第 4 步才會跑你的 callback —— 這條分界看清楚了，後面換 transport、換語言都只是換包裝。
 
 ---
 
